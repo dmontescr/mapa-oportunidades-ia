@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Oportunidades con IA</title>
+  <meta name="description" content="Descubre y comparte oportunidades de negocio detectadas con inteligencia artificial en ciudades de todo el mundo." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Estilos de la aplicación -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- ── FONDO ANIMADO CON ORBES ── -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">🗺️</div>
+          <div class="logo-text">
+            <h1>Mapa de Oportunidades</h1>
+            <p>Powered by Inteligencia Artificial</p>
+          </div>
+        </div>
+        <button class="btn-publish" id="btn-open-modal" onclick="openModal()">
+          <span>✦</span> Publicar Oportunidad
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── SECCIÓN HERO ── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span>🤖</span> Oportunidades detectadas con IA
+      </div>
+      <h2>Descubre el futuro<br /><span>del negocio global</span></h2>
+      <p>Una plataforma colaborativa para compartir oportunidades de negocio reales detectadas con inteligencia artificial en ciudades de todo el mundo.</p>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-number" id="stat-total">0</div>
+          <div class="stat-label">Oportunidades</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="stat-cities">0</div>
+          <div class="stat-label">Ciudades</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="stat-countries">0</div>
+          <div class="stat-label">Países</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="stat-likes">0</div>
+          <div class="stat-label">Likes totales</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FILTROS ── -->
+  <section class="filters-section">
+    <div class="container">
+      <div class="filters-title">🔍 Filtrar oportunidades</div>
+      <div class="filters-row">
+        <select class="filter-select" id="filter-city" onchange="applyFilters()">
+          <option value="">🏙️ Todas las ciudades</option>
+        </select>
+        <select class="filter-select" id="filter-country" onchange="applyFilters()">
+          <option value="">🌎 Todos los países</option>
+        </select>
+        <select class="filter-select" id="filter-category" onchange="applyFilters()">
+          <option value="">📂 Todas las categorías</option>
+          <option value="Tecnología">🖥️ Tecnología</option>
+          <option value="Salud">🏥 Salud</option>
+          <option value="Educación">📚 Educación</option>
+          <option value="Comercio">🛍️ Comercio</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Alimentación">🍽️ Alimentación</option>
+          <option value="Sostenibilidad">🌱 Sostenibilidad</option>
+          <option value="Otro">💡 Otro</option>
+        </select>
+        <button class="btn-reset-filters" onclick="resetFilters()">✕ Limpiar filtros</button>
+        <span class="results-count" id="results-count"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── GRID DE OPORTUNIDADES ── -->
+  <section class="opportunities-section">
+    <div class="container">
+      <div class="grid" id="opportunities-grid">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Cargando oportunidades desde Supabase...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MODAL: PUBLICAR OPORTUNIDAD ── -->
+  <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">✦ Nueva Oportunidad</div>
+        <button class="modal-close" onclick="closeModal()" title="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-opportunity" onsubmit="submitOpportunity(event)">
+          <div class="form-grid">
+
+            <div class="form-group full">
+              <label class="form-label" for="input-name">
+                Nombre de la oportunidad <span class="required">*</span>
+              </label>
+              <input
+                class="form-input"
+                id="input-name"
+                type="text"
+                placeholder="Ej: Servicio de entrega con IA predictiva"
+                required
+                maxlength="120"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-city">
+                Ciudad <span class="required">*</span>
+              </label>
+              <input
+                class="form-input"
+                id="input-city"
+                type="text"
+                placeholder="Ej: Madrid"
+                required
+                maxlength="80"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-country">
+                País <span class="required">*</span>
+              </label>
+              <input
+                class="form-input"
+                id="input-country"
+                type="text"
+                placeholder="Ej: España"
+                required
+                maxlength="80"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-category">
+                Categoría <span class="required">*</span>
+              </label>
+              <select class="form-select" id="input-category" required>
+                <option value="">Selecciona una categoría</option>
+                <option value="Tecnología">🖥️ Tecnología</option>
+                <option value="Salud">🏥 Salud</option>
+                <option value="Educación">📚 Educación</option>
+                <option value="Comercio">🛍️ Comercio</option>
+                <option value="Transporte">🚗 Transporte</option>
+                <option value="Alimentación">🍽️ Alimentación</option>
+                <option value="Sostenibilidad">🌱 Sostenibilidad</option>
+                <option value="Otro">💡 Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="input-potential">
+                Potencial <span class="required">*</span>
+              </label>
+              <select class="form-select" id="input-potential" required>
+                <option value="">Selecciona el potencial</option>
+                <option value="Alto">🚀 Alto</option>
+                <option value="Medio">📈 Medio</option>
+                <option value="Bajo">🔍 Bajo</option>
+              </select>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label" for="input-problem">
+                Problema detectado <span class="required">*</span>
+              </label>
+              <textarea
+                class="form-textarea"
+                id="input-problem"
+                placeholder="Describe el problema o necesidad que identificaste en esta ciudad..."
+                required
+                maxlength="500"
+              ></textarea>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label" for="input-ai-solution">
+                Solución con IA <span class="required">*</span>
+              </label>
+              <textarea
+                class="form-textarea"
+                id="input-ai-solution"
+                placeholder="Explica cómo la inteligencia artificial puede resolver este problema..."
+                required
+                maxlength="500"
+              ></textarea>
+            </div>
+
+          </div>
+
+          <button class="btn-submit" type="submit" id="btn-submit">
+            <span>🚀</span> Publicar Oportunidad
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST DE NOTIFICACIONES ── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Lógica de la aplicación -->
+  <script src="app.js"></script>
+
+</body>
+</html>
